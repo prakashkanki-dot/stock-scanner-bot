@@ -217,68 +217,95 @@ def analyze_stock(stock):
         score = 0
         reasons = []
 
+        # =================================================
         # BREAKOUT
+        # =================================================
+
         recent_high = float(high.tail(20).max())
 
         if price >= recent_high * 0.97:
             score += 2
             reasons.append("📈 Breakout")
 
-        # 52 WEEK HIGH
+        # =================================================
+        # 52 WEEK BREAKOUT
+        # =================================================
+
         high_52 = float(high.max())
 
         if price >= high_52 * 0.95:
             score += 2
             reasons.append("🚀 Near 52W High")
 
+        # =================================================
         # VOLUME SPIKE
+        # =================================================
+
         avg_volume = float(volume.tail(20).mean())
         latest_volume = float(volume.iloc[-1])
 
-        if latest_volume > avg_volume * 1.5:
+        if latest_volume > avg_volume * 1.2:
             score += 2
             reasons.append("📊 Volume Spike")
 
+        # =================================================
         # RSI
+        # =================================================
+
         rsi = calculate_rsi(close)
 
         latest_rsi = rsi.iloc[-1]
 
-        if 55 <= latest_rsi <= 70:
+        if 50 <= latest_rsi <= 75:
             score += 1
             reasons.append("🔥 Strong RSI")
 
+        # =================================================
         # MACD
+        # =================================================
+
         macd, signal = calculate_macd(close)
 
         if macd.iloc[-1] > signal.iloc[-1]:
             score += 2
             reasons.append("⚡ MACD Bullish")
 
+        # =================================================
         # VWAP
+        # =================================================
+
         vwap = calculate_vwap(df)
 
         if price > vwap.iloc[-1]:
             score += 1
             reasons.append("✅ Above VWAP")
 
+        # =================================================
         # SUPERTREND
+        # =================================================
+
         supertrend = calculate_supertrend(df)
 
         if price > supertrend.iloc[-1]:
             score += 2
             reasons.append("🟢 Supertrend Bullish")
 
-        # ATR
+        # =================================================
+        # ATR VOLATILITY
+        # =================================================
+
         atr = calculate_atr(df)
 
         atr_percent = (atr.iloc[-1] / price) * 100
 
-        if atr_percent > 2:
+        if atr_percent > 1.5:
             score += 1
             reasons.append("📉 Good Volatility")
 
-        # RELATIVE STRENGTH
+        # =================================================
+        # RELATIVE STRENGTH VS NIFTY
+        # =================================================
+
         stock_return = (
             (close.iloc[-1] - close.iloc[-20])
             / close.iloc[-20]
@@ -293,32 +320,47 @@ def analyze_stock(stock):
             score += 2
             reasons.append("🏆 Outperforming Nifty")
 
+        # =================================================
         # CONSOLIDATION
+        # =================================================
+
         recent_low = float(low.tail(20).min())
 
-        if (recent_high - recent_low) / recent_low < 0.18:
+        if (recent_high - recent_low) / recent_low < 0.25:
             score += 1
             reasons.append("📦 Consolidation")
 
+        # =================================================
         # MOMENTUM
+        # =================================================
+
         if price > close.tail(5).mean():
             score += 1
             reasons.append("🚀 Momentum")
 
-        # 20 DMA
+        # =================================================
+        # DMA
+        # =================================================
+
         dma20 = close.tail(20).mean()
 
         if price > dma20:
             score += 1
             reasons.append("✅ Above 20 DMA")
 
-        # CANDLESTICK
+        # =================================================
+        # CANDLESTICK PATTERN
+        # =================================================
+
         if bullish_engulfing(df):
             score += 2
             reasons.append("🕯 Bullish Engulfing")
 
+        # =================================================
         # FINAL FILTER
-        if score >= 10:
+        # =================================================
+
+        if score >= 6:
 
             return {
                 "stock": stock.replace(".NS", ""),

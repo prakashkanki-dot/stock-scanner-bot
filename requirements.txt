@@ -1,3 +1,5 @@
 yfinance
 python-telegram-bot
 pandas
+numpy
+requests
